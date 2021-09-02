@@ -1,0 +1,287 @@
+---
+title: "Mental Health Services Data Set Dashboard"
+output:
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    social: menu
+    source_code: embed
+    theme: cerulean
+runtime: shiny
+resource_files:
+- Clean data for dashboard/MHSDS_ED_pooled.csv
+- Clean data for dashboard/MHSDS_main_pooled.csv
+---
+
+```{r setup, include=FALSE}
+#Load packages
+library("tidyverse")
+library("lubridate")
+library("here")
+library("data.table")
+library("plotly")
+library("hrbrthemes")
+library("flexdashboard")
+
+#File locations
+source(here::here("0. File locations.R"))
+
+#Load main performance data
+MHSDS_main_pooled_dashboard <- fread("Clean data for dashboard/MHSDS_main_pooled.csv",header=TRUE, sep=",", check.names=T)
+
+  #Months
+months <- MHSDS_main_pooled_dashboard %>% arrange(desc(end_date)) %>% pull(month_year) %>% unique(.)
+latest_month <- MHSDS_main_pooled_dashboard %>%
+  slice_max(.,end_date,n=1,with_ties=FALSE) %>% 
+  pull(month_year)
+
+  #Locations
+locations <- MHSDS_main_pooled_dashboard %>%
+  filter(.,month_year==latest_month) %>%
+  filter(.,str_detect(PRIMARY_LEVEL_DESCRIPTION,"CCG")) %>%
+  pull(PRIMARY_LEVEL_DESCRIPTION) %>%
+  unique(.) %>%
+  c("England",.)
+
+#Load ED data
+MHSDS_ED_pooled_dashboard <- fread("Clean data for dashboard/MHSDS_ED_pooled.csv",header=TRUE, sep=",", check.names=T)
+
+#Reactive main performance table
+MHSDS_main_reac <- reactive({
+  tm <- MHSDS_main_pooled_dashboard %>%
+    filter(.,PRIMARY_LEVEL_DESCRIPTION==input$location)
+  return(tm)
+})
+
+#Reactive main performance table
+MHSDS_main_reac_both <- reactive({
+  tm <- MHSDS_main_pooled_dashboard %>%
+    filter(.,PRIMARY_LEVEL_DESCRIPTION==input$location,
+               month_year==input$date)
+  return(tm)
+})
+```
+
+Sidebar {.sidebar}
+=======================================================================
+
+### MHSDS parameters
+
+This dashboard displays key statistics produced by NHS Digital from their [MHSDS](https://digital.nhs.uk/data-and-information/data-collections-and-data-sets/data-sets/mental-health-services-data-set) data series. This version is for teaching purposes only.
+
+Application author: [Sebastien Peytrignet](https://github.com/sg-peytrignet), [The Health Foundation](www.health.org.uk)
+
+
+```{r}
+#Location
+selectInput('location', label = 'Select a location',
+            choices = locations, selected = "England")
+
+#Date
+selectInput('date', label = 'Select a month',
+            choices = months, selected = latest_month)
+
+```
+
+
+Children and young people's mental health
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### People in contact with CAMHS
+
+```{r}
+#Extract number
+cyp01_number <- reactive({
+  MHSDS_main_reac_both() %>%
+  filter(.,MEASURE_ID=="CYP01") %>%
+  mutate(.,MEASURE_VALUE=as.numeric(MEASURE_VALUE)) %>%
+  slice_max(end_date) %>%
+  pull(MEASURE_VALUE)
+})
+#Show number
+renderValueBox({
+  cyp01_value <- formatC(cyp01_number(), digits = 0, format = "f",big.mark=",")
+  valueBox(
+    value = cyp01_value,
+    icon = "fa-child",
+    color = "primary"
+  )
+})
+```
+
+### New referrals to CAMHS
+
+```{r}
+#Extract number
+cyp32_number <- reactive({
+  MHSDS_main_reac_both() %>%
+  filter(.,MEASURE_ID=="CYP32") %>%
+  mutate(.,MEASURE_VALUE=as.numeric(MEASURE_VALUE)) %>%
+  slice_max(end_date) %>%
+  pull(MEASURE_VALUE)
+})
+#Show number
+renderValueBox({
+  cyp32_value <- formatC(cyp32_number(), digits = 0, format = "f",big.mark=",")
+  valueBox(
+    value = cyp32_value,
+    icon = "fa-arrow-up",
+    color = "primary"
+  )
+})
+```
+
+### Open ward stays
+
+```{r}
+#Extract number
+cyp21_number <- reactive({
+  MHSDS_main_reac_both() %>%
+  filter(.,MEASURE_ID=="CYP21") %>%
+  mutate(.,MEASURE_VALUE=as.numeric(MEASURE_VALUE)) %>%
+  slice_max(end_date) %>%
+  pull(MEASURE_VALUE)
+})
+#Show number
+renderValueBox({
+  cyp21_value <- formatC(cyp21_number(), digits = 0, format = "f",big.mark=",")
+  valueBox(
+    value = cyp21_value,
+    icon = "fa-hospital",
+    color = "primary"
+  )
+})
+```
+
+Row
+-----------------------------------------------------------------------
+
+### Number of new referrals to CAMHS {data-width=500}
+
+```{r}
+
+output$open_referrals <- renderPlotly({
+  
+open_referrals_data <- MHSDS_main_reac() %>%
+  filter(MEASURE_ID=="CYP32") %>%
+  select(.,start_date,end_date,PRIMARY_LEVEL_DESCRIPTION,MEASURE_ID,MEASURE_VALUE) %>% 
+  mutate(.,MEASURE_VALUE=as.numeric(MEASURE_VALUE)) %>%
+  arrange(.,start_date) %>%
+  as_tibble()
+
+open_referrals_chart <- open_referrals_data %>%
+  ggplot(., aes(x=start_date, y=MEASURE_VALUE, group=PRIMARY_LEVEL_DESCRIPTION)) +
+  geom_line(aes(color=PRIMARY_LEVEL_DESCRIPTION),size=1) +
+  scale_x_date(date_labels = "%b %Y",date_breaks = "3 months") +
+  scale_y_continuous(labels = scales::comma) +
+  #ggtitle("Number of new referrals to CAMHS") +
+  theme_ipsum() +
+  xlab("Date") +
+  ylab("Number of new referrals") +
+  labs(col="Breakdown") +
+  scale_color_brewer(palette = "Dark2") +
+  theme(legend.position = "none",
+        panel.border = element_blank(),
+        text = element_text(size = 12),
+        legend.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        axis.text = element_text(size = 12),
+        axis.text.x = element_text(angle = 45, hjust = 1,size = 12),
+        axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 12),
+        axis.title.y = element_text(size = 12))
+  
+ggplotly(open_referrals_chart)
+  
+})
+
+plotlyOutput('open_referrals', width = "100%")
+
+```
+
+### Number of people in contact with CAMHS {data-width=500}
+
+```{r}
+
+output$people_in_contact <- renderPlotly({
+  
+number_contacts_data <- MHSDS_main_reac() %>%
+  filter(MEASURE_ID=="CYP01") %>%
+  select(.,start_date,end_date,PRIMARY_LEVEL_DESCRIPTION,MEASURE_ID,MEASURE_VALUE) %>% 
+  mutate(.,MEASURE_VALUE=as.numeric(MEASURE_VALUE)) %>%
+  arrange(.,start_date) %>%
+  as_tibble()
+
+number_contacts_chart <- number_contacts_data %>%
+  ggplot(., aes(x=start_date, y=MEASURE_VALUE, group=PRIMARY_LEVEL_DESCRIPTION)) +
+  geom_line(aes(color=PRIMARY_LEVEL_DESCRIPTION),size=1) +
+  scale_x_date(date_labels = "%b %Y",date_breaks = "3 months") +
+  scale_y_continuous(labels = scales::comma) +
+  #ggtitle("Number of contacts with CAMHS") +
+  theme_ipsum() +
+  xlab("Date") +
+  ylab("Number of contacts") +
+  labs(col="Breakdown") +
+  scale_color_brewer(palette = "Set1") +
+  theme(legend.position = "none",
+        panel.border = element_blank(),
+        text = element_text(size = 12),
+        legend.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        axis.text = element_text(size = 12),
+        axis.text.x = element_text(angle = 45, hjust = 1,size = 12),
+        axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 12),
+        axis.title.y = element_text(size = 12))
+
+ggplotly(number_contacts_chart)
+  
+})
+
+plotlyOutput('people_in_contact', width = "100%")
+
+```
+
+<!-- Eating disorders -->
+<!-- ======================================================================= -->
+
+<!-- Row -->
+<!-- ----------------------------------------------------------------------- -->
+
+<!-- ### Number of new referrals to CAMHS {data-width=500} -->
+
+<!-- ```{r} -->
+
+<!-- output$people_in_contact <- renderPlotly({ -->
+
+<!-- number_waiting_data <- MHSDS_ED_pooled %>% -->
+<!--   filter(MEASURE_ID=="ED88") %>% -->
+<!--   filter(BREAKDOWN=="England") %>% -->
+<!--   select(.,start_date,end_date,PRIMARY_LEVEL_DESCRIPTION,MEASURE_ID,MEASURE_VALUE) %>% -->
+<!--   mutate(.,MEASURE_VALUE=as.numeric(MEASURE_VALUE)) %>% -->
+<!--   arrange(.,start_date) %>% -->
+<!--   as_tibble() -->
+
+<!-- number_waiting_chart <- number_waiting_data %>% -->
+<!--   ggplot(., aes(x=start_date, y=MEASURE_VALUE, group=PRIMARY_LEVEL_DESCRIPTION)) + -->
+<!--   geom_line(aes(color=PRIMARY_LEVEL_DESCRIPTION),size=1) + -->
+<!--   scale_x_date(date_labels = "%b %Y",date_breaks = "1 month") + -->
+<!--   scale_y_continuous(labels = scales::comma) + -->
+<!--   ggtitle("Number of referrals for eating disorders waiting for treatment") + -->
+<!--   theme_ipsum() + -->
+<!--   xlab("Date") + -->
+<!--   ylab("Number of referrals") + -->
+<!--   labs(col="Breakdown") + -->
+<!--   scale_color_brewer(palette = "Set2") + -->
+<!--   theme(panel.border = element_blank(), -->
+<!--         legend.text=element_text(size=8), -->
+<!--         axis.text = element_text(size = 8), -->
+<!--         axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"))) -->
+
+<!-- ggplotly(number_waiting_chart) -->
+
+<!-- }) -->
+
+<!-- plotlyOutput('people_in_contact', width = "100%") -->
+
+<!-- ``` -->

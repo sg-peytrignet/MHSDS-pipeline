@@ -1,3 +1,7 @@
+#Dashboard data files
+/Clean data for dashboard/*.*
+/rsconnect/*.*
+
 # History files
 .Rhistory
 .Rapp.history
@@ -19,6 +23,7 @@
 
 # RStudio files
 .Rproj.user/
+*.Rproj
 
 # produced vignettes
 vignettes/*.html
