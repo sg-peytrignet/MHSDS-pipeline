@@ -80,7 +80,6 @@ MHSDS_main_pooled <- MHSDS_main_pooled %>%
   mutate(.,month_year=paste(lubridate::month(start_date,label = TRUE),lubridate::year(start_date),sep=" "))
 
 #Save data for dashboard
-fwrite(MHSDS_main_pooled, paste0(rawdatadir,main_name,"/Pooled/MHSDS_main_pooled.csv"), row.names = F, sep = ",")
 fwrite(MHSDS_main_pooled, here::here("Clean data for dashboard","MHSDS_main_pooled.csv"), row.names = F, sep = ",")
 
 ##################################################
@@ -102,7 +101,6 @@ MHSDS_ED_pooled <- MHSDS_ED_pooled %>%
          end_date=lubridate::dmy(REPORTING_PERIOD_END))
 
 #Save data for dashboard
-fwrite(MHSDS_ED_pooled, paste0(rawdatadir,ed_name,"/Pooled/MHSDS_ED_pooled_dashboard.csv"), row.names = F, sep = ",")
 fwrite(MHSDS_ED_pooled, here::here("Clean data for dashboard","MHSDS_ED_pooled.csv"), row.names = F, sep = ",")
 
 ##################################################
