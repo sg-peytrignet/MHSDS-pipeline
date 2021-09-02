@@ -1,3 +1,3 @@
-rawdatadir <- "/Users/sgpeytrignet/Documents/MHSDS data/" #Replace with name of your data folder
-main_name <- "Main performance files" #Replace with the name of your sub-folder for main performance files
-ed_name <- "Eating disorders files" #Replace with the name of your sub-folder for eating disorder files
+rawdatadir <- "/Users/sgpeytrignet/Documents/MHSDS data/" #Replace with name of your MHSDS data folder and start with an EMPTY folder
+main_name <- "Main performance files" #Change this if you would like your sub-folder to have a different name
+ed_name <- "Eating disorders files" #Change this if you would like your sub-folder to have a different name
