@@ -4,7 +4,7 @@
 
 ## Project Description
 
-- Each month, NHS Digital releases [key statistics](https://digital.nhs.uk/data-and-information/publications/statistical/mental-health-services-monthly-statistics) on the performance on mental health services in the NHS. Those are released as multiple spreadsheets each month, with a separate file for each type of measure (e.g. main performance stats, restrictive interventions, eating disorders, etc). See example below. Each sub-page contains multiple more links.
+- Each month, NHS Digital releases [key statistics](https://digital.nhs.uk/data-and-information/publications/statistical/mental-health-services-monthly-statistics) on the performance of mental health services in the NHS. Those are released as multiple spreadsheets each month, with a separate file for each type of measure (e.g. main performance stats, restrictive interventions, eating disorders, etc). See example below. Each sub-page contains multiple more links.
 
 <img src="images/nhse-screenshot.jpg" width="40%">
 
