@@ -28,8 +28,8 @@
 
 ## How does it work?
 
-1. Edit **0. File locations.R** with the location of the directory you would like to save your MHSDS files too. Start with an empty folder. For exmaple, I have chosen 'rawdatadir' as _"/Users/sgpeytrignet/Documents/MHSDS data/"_. 
-2. Run **1. MHSDS-data-cleaning.R** to download the desired MHSDS data locally, append them into a practical time-series files and do some basic data cleaning. If you are doing this for the first time (or if new data has been released it's time to refresh your data), set the 'refresh_data' parameter to _YES_. If you want to leave your data as is, set it to _NO_.
+1. Edit **0. File locations.R** with the location of the directory you would like to save your MHSDS files to. Start with an empty folder. For example, I have chosen 'rawdatadir' as _"/Users/sgpeytrignet/Documents/MHSDS data/"_. 
+2. Run **1. MHSDS-data-cleaning.R** to download the desired MHSDS data locally, append them into a practical time-series files and do some basic data cleaning. If you are doing this for the first time (or if new data has been released and it's time to refresh your data), set the 'refresh_data' parameter to _YES_. If you want to leave your data as is, set it to _NO_.
 3. Now, you should be ready to start running some simple analysis or doing some visualizations, for example using a dashboard.
 4. If you would like to create your own dashboard, feel free to adapt the **2. MHSDS-dashboard.Rmd** script!
  
