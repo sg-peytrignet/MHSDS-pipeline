@@ -63,4 +63,4 @@ If you would like a starter on building dashboards using flexdashboard, you can 
 
 ## License
 
-This project is licensed under the [MIT License].
+This project is licensed under the [MIT License](https://github.com/sg-peytrignet/MHSDS-pipeline/blob/main/LICENSE).
