@@ -23,7 +23,6 @@ rm(list = ls())
 source(here::here("0. File locations.R"))
 
 #Create sub-directories if not already there
-#setwd(rawdatadir)
 
 #Main performance files
 if (main_name %in% list.dirs(path = rawdatadir, full.names = FALSE, recursive = FALSE)){
@@ -109,8 +108,6 @@ monthly_names <- monthly_names %>%
 
 #Create function to download monthly series
 MHSDS_monthly_series_download <- function(monthyr){
-  
-  #monthyr <- "june 2021"
   
   #Display series name
   print(monthyr)
@@ -200,7 +197,7 @@ MHSDS_monthly_series_download <- function(monthyr){
 #Test function
 #MHSDS_monthly_series_download("december 2020")
 
-#Choose months
+#Choose months to run function on
 all_months <- monthly_names %>%
   pull(month_year)
 
