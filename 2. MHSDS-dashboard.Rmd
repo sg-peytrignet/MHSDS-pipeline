@@ -48,7 +48,9 @@ MHSDS_ED_pooled_dashboard <- fread("Clean data for dashboard/MHSDS_ED_pooled.csv
 #Reactive main performance table
 MHSDS_main_reac <- reactive({
   tm <- MHSDS_main_pooled_dashboard %>%
-    filter(.,PRIMARY_LEVEL_DESCRIPTION==input$location)
+    filter(.,PRIMARY_LEVEL_DESCRIPTION==input$location) %>%
+    mutate(.,start_date=lubridate::ymd(start_date),
+           end_date=lubridate::ymd(end_date))
   return(tm)
 })
 
@@ -56,7 +58,9 @@ MHSDS_main_reac <- reactive({
 MHSDS_main_reac_both <- reactive({
   tm <- MHSDS_main_pooled_dashboard %>%
     filter(.,PRIMARY_LEVEL_DESCRIPTION==input$location,
-               month_year==input$date)
+               month_year==input$date) %>%
+    mutate(.,start_date=lubridate::ymd(start_date),
+           end_date=lubridate::ymd(end_date))
   return(tm)
 })
 ```
