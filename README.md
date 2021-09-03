@@ -33,7 +33,7 @@
 3. Now, you should be ready to start running some simple analysis or doing some visualizations, for example using a dashboard.
 4. If you would like to create your own dashboard, feel free to adapt the **2. MHSDS-dashboard.Rmd** script!
  
-### Requirements
+## Requirements
 
 The following R packages (available on CRAN) are needed:
 
