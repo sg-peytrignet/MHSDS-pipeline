@@ -22,7 +22,7 @@
   - Eating disorder indicators
 - It could be adpated to include more types of metrics (e.g. Mental Health Act metrics or restrictive interventions).
 
-- I have also provided some code that produces a simple [dashboard](https://sgpeytrignet.shinyapps.io/MHSDS-dashboard/) powered by flexdashboard. You can adapt this at the end of your pipeline to build a dashboard of your choice with the mental health metrics of your choice.
+- I have also provided some code that produces a simple [dashboard](https://sgpeytrignet.shinyapps.io/MHSDS-dashboard/) powered by flexdashboard. You can adapt this at the end of your pipeline to build a dashboard with the mental health metrics of your choice.
 
 <img src="images/dashboard-example.jpg" width="70%">
 
