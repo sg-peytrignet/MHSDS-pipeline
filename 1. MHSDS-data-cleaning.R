@@ -20,7 +20,7 @@ rm(list = ls())
 #If new data has been added to the NHS England website, change to 'YES' to add this
 #Otherwise leave as 'NO'
 
-refresh_data <- "NO"
+refresh_data <- "YES"
 
 if(refresh_data=="YES"){
   #Refresh data
@@ -47,17 +47,6 @@ MHSDS_main_pooled <- fread(paste0(rawdatadir,main_name,"/Pooled/MHSDS_main_poole
                       header=TRUE, sep=",", check.names=T)
 
 #Subset of metrics (to make size more manageable)
-
-# CYP_measures <- MHSDS_main_pooled %>%
-#   filter(.,startsWith(MEASURE_ID, "CYP")) %>%
-#   pull(MEASURE_NAME) %>%
-#   unique(.)
-# 
-# under18_measures <- MHSDS_main_pooled %>%
-#   mutate(MEASURE_NAME=tolower(MEASURE_NAME)) %>% 
-#   filter(.,str_detect(MEASURE_NAME, "0 to 18|under 16|age 16|age 17|0 to 17|under 18")) %>%
-#   pull(MEASURE_NAME) %>%
-#   unique(.)
 
 MHSDS_main_pooled <- MHSDS_main_pooled %>%
   filter(.,MEASURE_ID %in% c("CYP01","CYP32","CYP21"))
