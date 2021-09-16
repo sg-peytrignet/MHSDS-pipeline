@@ -49,7 +49,7 @@ MHSDS_main_pooled <- fread(paste0(rawdatadir,main_name,"/Pooled/MHSDS_main_poole
 #Subset of metrics (to make size more manageable)
 
 MHSDS_main_pooled <- MHSDS_main_pooled %>%
-  filter(.,MEASURE_ID %in% c("CYP01","CYP32","CYP21"))
+  filter(.,MEASURE_ID %in% c("CYP01","CYP32","CYP21","MHS30e","CCR70b","CCR71b","MHS22a","MHS57a"))
 
 #Correct dates
 MHSDS_main_pooled <- MHSDS_main_pooled %>%
@@ -88,7 +88,7 @@ ed_cyp_measures <- MHSDS_ED_pooled %>%
 
 #Clean up dates
 MHSDS_ED_pooled <- MHSDS_ED_pooled %>%
-  filter(.,MEASURE_ID %in% c("ED88")) %>% 
+  filter(.,MEASURE_ID %in% c("ED88","ED89","ED86e","ED87e")) %>% 
   mutate(.,start_date=lubridate::dmy(REPORTING_PERIOD_START),
          end_date=lubridate::dmy(REPORTING_PERIOD_END))
 
