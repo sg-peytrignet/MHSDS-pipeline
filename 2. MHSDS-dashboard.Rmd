@@ -10,6 +10,8 @@ runtime: shiny
 resource_files:
 - Clean data for dashboard/MHSDS_ED_pooled.csv
 - Clean data for dashboard/MHSDS_main_pooled.csv
+- Clean data for dashboard/NHS workforce statistics - data.xlsx
+
 ---
 
 ```{r setup, include=FALSE}
@@ -21,6 +23,8 @@ library("data.table")
 library("plotly")
 library("hrbrthemes")
 library("flexdashboard")
+library("readxl")
+library("DescTools")
 
 #File locations
 source(here::here("0. File locations.R"))
@@ -36,6 +40,10 @@ latest_month <- MHSDS_main_pooled_dashboard %>%
 
 #Load ED data
 MHSDS_ED_pooled_dashboard <- fread("Clean data for dashboard/MHSDS_ED_pooled.csv",header=TRUE, sep=",", check.names=T)
+
+#Load workforce data
+NHS_workforce_doctors <- read_excel("Clean data for dashboard/NHS workforce statistics - data.xlsx")
+NHS_workforce_other <- read_excel("Clean data for dashboard/NHS workforce statistics - other - data.xlsx")
 
   #Locations
 locations <- MHSDS_main_pooled_dashboard %>%
@@ -72,6 +80,15 @@ MHSDS_ED_reac <- reactive({
          end_date=lubridate::dmy(REPORTING_PERIOD_END))
   return(tm)
 })
+
+#Graph parameters
+m <- list(
+  l = 20,
+  r = 20,
+  b = 20,
+  t = 20,
+  pad = 2
+)
 ```
 
 Sidebar {.sidebar}
@@ -195,21 +212,26 @@ CAMHS_contacts_chart <- CAMHS_contacts_data %>%
   scale_y_continuous(labels = scales::comma) +
   facet_wrap(~timing, scales = "free_x") +
   theme_ipsum() +
-  xlab("Date") +
-  ylab("Number of people") +
-  labs(col="Type") +
+  xlab("") +
+  ylab("") +
+  labs(col="") +
   scale_color_brewer(palette = "Set1") +
-  theme(panel.border = element_blank(),
-        text = element_text(size = 12),
-        legend.title=element_text(size=12),
-        legend.text=element_text(size=12),
-        axis.text = element_text(size = 12),
-        axis.text.x = element_text(angle = 45, hjust = 1,size = 12),
-        axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 12),
-        axis.title.y = element_text(size = 12))
+  theme(legend.position="bottom",
+        panel.border = element_blank(),
+        strip.text = element_text(size=8),
+        text = element_text(size = 8),
+        legend.title=element_text(size=8),
+        legend.text=element_text(size=8),
+        axis.text = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.text.x = element_text(angle = 45, hjust = 1,size = 8),
+        axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 8),
+        axis.title.y = element_text(size = 8))
   
-ggplotly(CAMHS_contacts_chart)
-  
+ggplotly(CAMHS_contacts_chart) %>%
+  layout(autosize = T, margin = m) %>%
+  layout(legend = list(orientation = 'h'))
+
 })
 
 plotlyOutput('people_in_contact', width = "100%")
@@ -236,24 +258,27 @@ urgent_crisis_referrals_chart <- urgent_crisis_referrals_data %>%
   scale_x_date(date_labels = "%b %Y",date_breaks = "3 months") +
   scale_y_continuous(labels = scales::comma) +
   facet_wrap(~timing, scales = "free_x") +
-  ggtitle("Number of crisis referrals (<18 yrs)") +
   theme_ipsum() +
   xlab("") +
   ylab("") +
-  labs(fill="Type") +
+  labs(fill="") +
   scale_fill_manual(values=c("urgent" = "brown", "emergency" = "firebrick2")) +
   theme(panel.border = element_blank(),
-        text = element_text(size = 12),
-        legend.title=element_text(size=12),
-        legend.text=element_text(size=12),
-        axis.text = element_text(size = 12),
-        axis.text.x = element_text(angle = 45, hjust = 1,size = 12),
-        axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 12),
-        axis.title.y = element_text(size = 12),
+        strip.text = element_text(size=8),
+        text = element_text(size = 8),
+        legend.title=element_text(size=8),
+        legend.text=element_text(size=8),
+        axis.text = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.text.x = element_text(angle = 45, hjust = 1,size = 8),
+        axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 8),
+        axis.title.y = element_text(size = 8),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
 
-ggplotly(urgent_crisis_referrals_chart)
+ggplotly(urgent_crisis_referrals_chart) %>%
+  layout(autosize = T, margin = m) %>%
+  layout(legend = list(orientation = 'h'))
   
 })
 
@@ -294,7 +319,6 @@ consultation_mode_chart <- consultation_mode_data %>%
   scale_x_date(date_labels = "%b %Y",date_breaks = "3 months") +
   scale_y_continuous(labels = scales::comma) +
   facet_wrap(~timing, scales = "free_x") +
-  ggtitle("Number of mental health contacts by mode (<18 yrs)") +
   theme_ipsum() +
   xlab("") +
   ylab("") +
@@ -311,7 +335,9 @@ consultation_mode_chart <- consultation_mode_data %>%
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
 
-ggplotly(consultation_mode_chart)
+ggplotly(consultation_mode_chart) %>%
+  layout(autosize = T, margin = m) %>%
+  layout(legend = list(orientation = 'h'))
 
 })
 
@@ -357,34 +383,33 @@ number_waiting_ed_chart <- number_waiting_ed_data %>%
   scale_x_date(date_labels = "%b %Y",date_breaks = "1 month") +
   scale_y_continuous(labels = scales::comma) +
   facet_wrap(~timing, scales = "free_x") +
-  ggtitle("Number of people waiting for treatment (<18 yrs)") +
   theme_ipsum() +
   xlab("") +
   ylab("") +
-  labs(fill="Type") +
+  labs(fill="") +
   scale_fill_manual(values=
                       c("urgent" = "brown", "non urgent" = "darkseagreen4")) +
-  theme(panel.border = element_blank(),
-        text = element_text(size = 12),
-        legend.title=element_text(size=12),
-        legend.text=element_text(size=12),
-        axis.text = element_text(size = 12),
-        axis.text.x = element_text(angle = 45, hjust = 1,size = 12),
-        axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 12),
-        axis.title.y = element_text(size = 12),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
+  theme(legend.position="bottom",
+        panel.border = element_blank(),
+        strip.text = element_text(size=8),
+        text = element_text(size = 8),
+        legend.title=element_text(size=8),
+        legend.text=element_text(size=8),
+        axis.text = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.text.x = element_text(angle = 45, hjust = 1,size = 8),
+        axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 8),
+        axis.title.y = element_text(size = 8))
 
-ggplotly(number_waiting_ed_chart)
+ggplotly(number_waiting_ed_chart) %>%
+  layout(autosize = T, margin = m) %>%
+  layout(legend = list(orientation = 'h'))
 
 })
 
 plotlyOutput('ed_waiting', width = "100%")
 
 ```
-
-Row
------------------------------------------------------------------------
 
 ### Number of people starting treatment within target time {data-width=500}
 
@@ -394,8 +419,7 @@ output$ed_target_time <- renderPlotly({
 
 target_time_ed_data <- MHSDS_ED_reac() %>%
   filter(.,MEASURE_ID %in% c("ED86e","ED87e")) %>%
-  select(.,start_date,
-         end_date,PRIMARY_LEVEL_DESCRIPTION,MEASURE_ID,MEASURE_VALUE) %>%
+  select(.,start_date,end_date,PRIMARY_LEVEL_DESCRIPTION,MEASURE_ID,MEASURE_VALUE) %>%
   mutate(.,timing=ifelse(start_date<ymd("2020-04-01"),"Pre-COVID","Post-COVID")) %>%
   mutate(.,timing=fct_relevel(timing, c("Pre-COVID","Post-COVID"))) %>%
   mutate(.,MEASURE_VALUE=as.numeric(MEASURE_VALUE),
@@ -409,36 +433,39 @@ target_time_ed_chart <- target_time_ed_data %>%
   scale_x_date(date_labels = "%b %Y",date_breaks = "1 month") +
   scale_y_continuous(labels = scales::comma) +
   facet_wrap(~timing, scales = "free_x") +
-  ggtitle("Proportion of people starting treatment within target time (<18 yrs)") +
   theme_ipsum() +
   xlab("") +
   ylab("") +
-  labs(fill="Type") +
+  labs(col="") +
   scale_colour_manual(values=
                       c("urgent" = "brown", "non urgent" = "darkseagreen4")) +
-  theme(panel.border = element_blank(),
-        text = element_text(size = 12),
-        legend.title=element_text(size=12),
-        legend.text=element_text(size=12),
-        axis.text = element_text(size = 12),
-        axis.text.x = element_text(angle = 45, hjust = 1,size = 12),
-        axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 12),
-        axis.title.y = element_text(size = 12),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank())
+  theme(legend.position="bottom",
+        panel.border = element_blank(),
+        strip.text = element_text(size=8),
+        text = element_text(size = 8),
+        legend.title=element_text(size=8),
+        legend.text=element_text(size=8),
+        axis.text = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.text.x = element_text(angle = 45, hjust = 1,size = 8),
+        axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 8),
+        axis.title.y = element_text(size = 8))
 
-ggplotly(target_time_ed_chart)
+ggplotly(target_time_ed_chart) %>%
+  layout(autosize = T, margin = m) %>%
+  layout(legend = list(orientation = 'h'))
 
 })
 
 plotlyOutput('ed_target_time', width = "100%")
+#tableOutput("ed_target_time")
 
 ```
 
 Other metrics
 =======================================================================
 
-Row
+Row {data-height=400}
 -----------------------------------------------------------------------
 
 ### Number of discharges from referral (<18 yrs) {data-width=500}
@@ -460,31 +487,30 @@ discharge_chart <- discharge_data %>%
    scale_x_date(date_labels = "%b %Y",date_breaks = "3 months") +
    scale_y_continuous(labels = scales::comma) +
    facet_wrap(~timing, scales = "free_x") +
-   ggtitle("Number of discharges from referral (<18 yrs)") +
    theme_ipsum() +
    xlab("") +
    ylab("") +
-   theme(panel.border = element_blank(),
-         text = element_text(size = 12),
-         legend.title=element_text(size=12),
-         legend.text=element_text(size=12),
-         axis.text = element_text(size = 12),
-         axis.text.x = element_text(angle = 45, hjust = 1,size = 12),
-         axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 12),
-         axis.title.y = element_text(size = 12),
-         panel.grid.major = element_blank(),
-         panel.grid.minor = element_blank())
+   theme(legend.position="bottom",
+        panel.border = element_blank(),
+        strip.text = element_text(size=8),
+        text = element_text(size = 8),
+        legend.title=element_text(size=8),
+        legend.text=element_text(size=8),
+        axis.text = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.text.x = element_text(angle = 45, hjust = 1,size = 8),
+        axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 8),
+        axis.title.y = element_text(size = 8))
 
- ggplotly(discharge_chart)
+ggplotly(discharge_chart) %>%
+  layout(autosize = T, margin = m) %>%
+  layout(legend = list(orientation = 'h'))
 
 })
 
 plotlyOutput('discharges', width = "100%")
 
 ```
-
-Row
------------------------------------------------------------------------
 
 ### Number of ward stays >50km away {data-width=500}
 
@@ -505,25 +531,218 @@ far_ward_chart <- far_ward_data %>%
    scale_x_date(date_labels = "%b %Y",date_breaks = "3 months") +
    scale_y_continuous(labels = scales::comma) +
    facet_wrap(~timing, scales = "free_x") +
-   ggtitle("Number of ward stays >50km away (<18 yrs)") +
    theme_ipsum() +
    xlab("") +
    ylab("") +
-   theme(panel.border = element_blank(),
-         text = element_text(size = 12),
-         legend.title=element_text(size=12),
-         legend.text=element_text(size=12),
-         axis.text = element_text(size = 12),
-         axis.text.x = element_text(angle = 45, hjust = 1,size = 12),
-         axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 12),
-         axis.title.y = element_text(size = 12),
-         panel.grid.major = element_blank(),
-         panel.grid.minor = element_blank())
+   theme(legend.position="bottom",
+        panel.border = element_blank(),
+        strip.text = element_text(size=8),
+        text = element_text(size = 8),
+        legend.title=element_text(size=8),
+        legend.text=element_text(size=8),
+        axis.text = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.text.x = element_text(angle = 45, hjust = 1,size = 8),
+        axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 8),
+        axis.title.y = element_text(size = 8))
  
- ggplotly(far_ward_chart)
+ ggplotly(far_ward_chart) %>%
+  layout(autosize = T, margin = m) %>%
+  layout(legend = list(orientation = 'h'))
 
 })
 
 plotlyOutput('far_ward', width = "100%")
+
+```
+
+Row {data-height=600}
+-----------------------------------------------------------------------
+
+### Changes in activity compared to previous year {data-width=500}
+
+```{r}
+
+output$pct_change <- renderPlotly({
+
+CAMHS_people_in_contact_data <- MHSDS_main_reac() %>%
+  filter(.,MEASURE_ID %in% c("CYP01","CYP23","MHS61a")) %>%
+  select(.,PRIMARY_LEVEL_DESCRIPTION,MEASURE_ID,MEASURE_VALUE,start_date,month_year) %>%
+  mutate(.,MEASURE_VALUE=as.numeric(MEASURE_VALUE),
+         start_date_l1=start_date-years(1),
+         MEASURE_KEY=case_when(
+           MEASURE_ID=="CYP01" ~ "People in contact",
+           MEASURE_ID=="CYP23" ~ "Open referrals",
+           MEASURE_ID=="MHS61a" ~ "First contacts (<18)",
+           TRUE ~ "NA"
+         ))
+
+CAMHS_people_in_contact_l1 <- CAMHS_people_in_contact_data %>%
+  select(.,start_date,MEASURE_VALUE,PRIMARY_LEVEL_DESCRIPTION,MEASURE_ID,MEASURE_KEY) %>%
+  rename(.,MEASURE_VALUE_l1=MEASURE_VALUE,start_date_l1=start_date)
+
+CAMHS_people_in_contact_data <- left_join(CAMHS_people_in_contact_data,
+          CAMHS_people_in_contact_l1,
+          by=c("start_date_l1","PRIMARY_LEVEL_DESCRIPTION","MEASURE_ID","MEASURE_KEY")) %>%
+  arrange(.,MEASURE_ID,start_date) %>%
+  mutate(pct_change_l1=(MEASURE_VALUE-MEASURE_VALUE_l1)/MEASURE_VALUE_l1*100) %>%
+  filter(.,!is.na(pct_change_l1))
+rm(CAMHS_people_in_contact_l1)
+
+CAMHS_people_in_contact_chart <- CAMHS_people_in_contact_data %>%
+  ggplot(., aes(x=start_date, y=pct_change_l1, group= MEASURE_KEY)) +
+  geom_line(aes(color= MEASURE_KEY),size=1) +
+  scale_x_date(date_labels = "%b %Y",date_breaks = "1 month") +
+  theme_ipsum() +
+  xlab("") +
+  ylab("% change") +
+  labs(col="") +
+  scale_color_manual(values=c("Open referrals" = "aquamarine4",
+                              "People in contact" = "tomato3",
+                              "First contacts (<18)" = "olivedrab4")) +
+  theme(legend.position="bottom",
+        panel.border = element_blank(),
+        strip.text = element_text(size=8),
+        text = element_text(size = 8),
+        legend.title=element_text(size=8),
+        legend.text=element_text(size=8),
+        axis.text = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.text.x = element_text(angle = 45, hjust = 1,size = 8),
+        axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 8),
+        axis.title.y = element_text(size = 8))
+
+ggplotly(CAMHS_people_in_contact_chart) %>%
+  layout(autosize = T, margin = m)
+})
+
+plotlyOutput('pct_change', width = "100%")
+
+```
+
+CAMHS workforce and demand
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### People in contacts with CAMHS compared to FTE staff {data-width=500}
+
+```{r}
+
+output$contactsvsstaff <- renderPlotly({
+
+############## CAMHS activity level
+
+CAMHS_contacts <- MHSDS_main_pooled_dashboard %>%
+  filter(.,PRIMARY_LEVEL_DESCRIPTION=="England",
+         MEASURE_ID=="CYP01") %>%
+  select(.,start_date,MEASURE_VALUE) %>%
+  mutate(.,date_ymd=lubridate::ymd(start_date)) %>%
+  mutate(.,date_ymd=floor_date(date_ymd, "month"),
+         measure="People in contact CAMHS",
+         MEASURE_VALUE=as.numeric(MEASURE_VALUE)) %>%
+  select(.,-"start_date") %>%
+  arrange(.,date_ymd)
+
+############## Consultants chart
+
+mh_nurses_data <- NHS_workforce_other %>%
+  mutate(.,date_ymd=lubridate::ymd(Date)) %>%
+  mutate(.,date_ymd=floor_date(date_ymd, "month"),
+         measure="FTE nurses") %>%
+  rename(.,MEASURE_VALUE=`Total FTE`,
+         `Specialty`=`Staff Group 2`) %>%
+  filter(`Specialty` %in% c("010_Nurses - mental health")) %>%
+  mutate(`Specialty`=ifelse(`Specialty`=="010_Nurses - mental health","Mental health",`Specialty`)) %>% 
+  group_by(date_ymd,measure,`Specialty`) %>%
+  summarise(MEASURE_VALUE=sum(MEASURE_VALUE,na.rm=TRUE)) %>% 
+  ungroup()
+
+psych_doctors_data <- NHS_workforce_doctors %>%
+  mutate(.,date_ymd=lubridate::ymd(Date)) %>%
+  mutate(.,date_ymd=floor_date(date_ymd, "month"),
+         measure="FTE doctors") %>%
+  rename(.,MEASURE_VALUE=FTE) %>%
+  filter(Specialty %in% c("Child and adolescent psychiatry",
+                          "General psychiatry")) %>%
+  group_by(date_ymd,measure,`Specialty Group`,Specialty) %>%
+  summarise(MEASURE_VALUE=sum(MEASURE_VALUE,na.rm=TRUE)) %>% 
+  ungroup()
+
+mh_all_staff_data <- mh_nurses_data %>%
+  bind_rows(.,psych_doctors_data) %>% 
+  bind_rows(.,CAMHS_contacts) %>% 
+  mutate(.,date_ymd_l1=date_ymd-years(1))
+
+mh_all_staff_data_l1 <- mh_all_staff_data %>%
+  select(.,date_ymd,measure,`Specialty Group`,Specialty,MEASURE_VALUE) %>%
+  rename(.,MEASURE_VALUE_l1=MEASURE_VALUE,date_ymd_l1=date_ymd)
+
+mh_all_staff_data <- left_join(mh_all_staff_data,
+                                mh_all_staff_data_l1,
+                                by=c("date_ymd_l1","measure","Specialty Group","Specialty")) %>%
+  arrange(.,Specialty,date_ymd) %>%
+  mutate(pct_change_l1=(MEASURE_VALUE-MEASURE_VALUE_l1)/MEASURE_VALUE_l1*100) %>%
+  mutate(.,fy_precovid=ifelse(date_ymd>=ymd("2019-04-01")&
+                                date_ymd<=ymd("2020-03-01"),1,0)) %>%
+  mutate(.,date_post_covid=ifelse(fy_precovid==0,date_ymd,"pre-COVID")) %>%
+  mutate(.,group_for_base_chart=paste(measure,`Specialty Group`,`Specialty`,
+                                      fy_precovid,date_post_covid))
+rm(mh_all_staff_data_l1)
+
+
+############## Level 100 chart
+
+base100_data <- mh_all_staff_data %>%
+  filter(date_ymd>=ymd("2019-04-01")) %>% 
+  group_by(group_for_base_chart) %>%
+  mutate(.,MEASURE_VALUE_avg=mean(MEASURE_VALUE,na.rm=TRUE)) %>%
+  mutate(.,pre_value=as.numeric(ifelse(fy_precovid==1,MEASURE_VALUE_avg,NA))) %>%
+  ungroup() %>%
+  group_by(measure,Specialty) %>%
+  mutate(.,pre_value=LOCF(pre_value)) %>%
+  mutate(value_base100=MEASURE_VALUE_avg/pre_value*100) %>% 
+  ungroup() %>%
+  filter(date_ymd>=ymd("2020-03-01"))
+
+base100_chart <- base100_data %>%
+  mutate(chart_group=paste(measure,Specialty,sep=" ")) %>%
+  mutate(chart_group=str_replace_all(chart_group," NA","")) %>% 
+  ggplot(., aes(x=date_ymd, y=value_base100, group=chart_group)) +
+  geom_line(aes(color=chart_group),size=1.5) +
+  scale_x_date(date_labels = "%b %Y",date_breaks = "3 months") +
+  scale_y_continuous(labels = scales::comma) +
+  theme_ipsum() +
+  xlab("") +
+  ylab("Activity") +
+  labs(col="",
+       title = "Mental health services for children and young people", 
+       subtitle = "Comparison to pre-COVID levels", 
+       caption = "100 = average activity in year before March 2020") +
+  scale_color_brewer(palette = "Set1") +
+  theme(legend.position="right",
+        panel.border = element_blank(),
+        strip.text = element_text(size=12),
+        text = element_text(size = 12),
+        legend.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        axis.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        axis.text.x = element_text(angle = 45, hjust = 1,size = 12),
+        axis.title.x = element_text(margin = unit(c(3, 0, 0, 0), "mm"),size = 12),
+        axis.title.y = element_text(size = 12))
+
+ggplotly(base100_chart) %>%
+  layout(autosize = T,
+         annotations = 
+           list(x = 1, y = -0.1, text = "100 = average level in year pre-COVID", 
+                showarrow = F, xref='paper', yref='paper', 
+                xanchor='right', yanchor='auto', xshift=0, yshift=0,
+                font=list(size=15, color="black")))
+  
+})
+
+plotlyOutput('contactsvsstaff', width = "100%")
 
 ```

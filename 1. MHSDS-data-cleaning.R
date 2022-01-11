@@ -49,7 +49,10 @@ MHSDS_main_pooled <- fread(paste0(rawdatadir,main_name,"/Pooled/MHSDS_main_poole
 #Subset of metrics (to make size more manageable)
 
 MHSDS_main_pooled <- MHSDS_main_pooled %>%
-  filter(.,MEASURE_ID %in% c("CYP01","CYP32","CYP21","MHS30e","CCR70b","CCR71b","MHS22a","MHS57a"))
+  filter(.,MEASURE_ID %in% c("CYP01","CYP32","CYP21","MHS81a",
+                             "MHS30e","CCR70b","CCR71b","MHS22a","MHS57a",
+                             "CYP23","MHS61a","MHS30d","MHS32a",
+                             "ED88","ED89","ED86e","ED87e"))
 
 #Correct dates
 MHSDS_main_pooled <- MHSDS_main_pooled %>%

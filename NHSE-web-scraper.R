@@ -109,6 +109,8 @@ monthly_names <- monthly_names %>%
 #Create function to download monthly series
 MHSDS_monthly_series_download <- function(monthyr){
   
+  #monthyr <- "september 2021"
+  
   #Display series name
   print(monthyr)
   
@@ -137,8 +139,10 @@ MHSDS_monthly_series_download <- function(monthyr){
     ### FIRST FILE: Main performance file
     
     #Find link
-    patterns_perf <- c(paste0("Data_",month_abbv,"Prf"),
-                       paste0("MHSDS%20Data_",month_abbv))
+    patterns_perf <- c(paste0("MHSDS_Data_",month_abbv,"F"),
+                       paste0("Data_",month_abbv,"Prf"),
+                       paste0("MHSDS%20Data_",month_abbv),
+                       paste0("MHSDS%20Monthly_File_",month_abbv))
     prf_link <- csv_names %>%
       filter(.,str_detect(link, paste(patterns_perf, collapse = "|"))) %>%
       slice_head(.,n=1) %>%
@@ -195,7 +199,7 @@ MHSDS_monthly_series_download <- function(monthyr){
 }
 
 #Test function
-#MHSDS_monthly_series_download("december 2020")
+# MHSDS_monthly_series_download("september 2021")
 
 #Choose months to run function on
 all_months <- monthly_names %>%
@@ -218,6 +222,51 @@ nr_files_after <- sapply(c(paste0(rawdatadir,main_name),
 ####################################################################
 
 ### Main performance files
+
+#Reshaping older files
+
+basedir_main <- paste0(rawdatadir,main_name)
+
+file_names_main_wide <- list.files(path = basedir_main, pattern= '*.csv', full.names = F, recursive = F) %>%
+  as.data.frame() %>%
+  rename(., filename=".") %>% 
+  filter(.,str_detect(filename,"MHSDS Monthly_File_"))
+
+for (k in 1:nrow(file_names_main_wide)){
+  #k <- 1
+  print(k)
+  
+  #Read in wide file
+  data_wide <- fread(file = file.path(basedir_main, file_names_main_wide$filename[k]), header = T, colClasses = "character")
+  
+  #Check if already in long format, otherwise reformat
+  if(ncol(data_wide)==11){
+    print("already in long format")
+  } else {
+    print("reformatting")
+    var_names <- names(data_wide)[which(!(names(data_wide) %in% c("REPORTING_PERIOD","STATUS","BREAKDOWN",
+                                                                  "PRIMARY_LEVEL","PRIMARY_LEVEL_DESCRIPTION",
+                                                                  "SECONDARY_LEVEL","SECONDARY_LEVEL_DESCRIPTION")))]
+    data_long <- data_wide %>%
+      pivot_longer(cols=var_names,
+                   names_to="MEASURE_ID_NAME",values_to="MEASURE_VALUE") %>%
+      mutate(.,REPORTING_PERIOD_START=paste("01-",REPORTING_PERIOD),
+             REPORTING_PERIOD_END=paste("01-",REPORTING_PERIOD),
+             MEASURE_ID=word(MEASURE_ID_NAME, 1, sep=" - "),
+             MEASURE_NAME=word(MEASURE_ID_NAME, 2, sep=" - ")) %>%
+      mutate(REPORTING_PERIOD_START=lubridate::dmy(REPORTING_PERIOD_START),
+             REPORTING_PERIOD_END=lubridate::dmy(REPORTING_PERIOD_END)) %>%
+      mutate(REPORTING_PERIOD_START=floor_date(REPORTING_PERIOD_START, "month"),
+             REPORTING_PERIOD_END=ceiling_date(REPORTING_PERIOD_END, "month")) %>% 
+      select(.,-c("REPORTING_PERIOD","MEASURE_ID_NAME")) %>%
+      filter(.,MEASURE_ID!="Annual") #to remove duplicates
+    
+    #Save in long format
+    fwrite(data_long, paste0(basedir_main,"/",file_names_main_wide$filename[k]), row.names = F, sep = ",")
+  }
+  }
+
+#Appending
 
 if ((nr_files_before[which(names(nr_files_before)==paste0(rawdatadir,main_name))] <
   nr_files_after[which(names(nr_files_after)==paste0(rawdatadir,main_name))])|
