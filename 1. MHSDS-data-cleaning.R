@@ -20,7 +20,7 @@ rm(list = ls())
 #If new data has been added to the NHS England website, change to 'YES' to add this
 #Otherwise leave as 'NO'
 
-refresh_data <- "YES"
+refresh_data <- "NO"
 
 if(refresh_data=="YES"){
   #Refresh data
@@ -49,10 +49,11 @@ MHSDS_main_pooled <- fread(paste0(rawdatadir,main_name,"/Pooled/MHSDS_main_poole
 #Subset of metrics (to make size more manageable)
 
 MHSDS_main_pooled <- MHSDS_main_pooled %>%
-  filter(.,MEASURE_ID %in% c("CYP01","CYP32","CYP21","MHS81a",
+  filter(.,MEASURE_ID %in% c("CYP01","CYP32","CYP21","MHS81a","MHS95","MHS69",
                              "MHS30e","CCR70b","CCR71b","MHS22a","MHS57a",
-                             "CYP23","MHS61a","MHS30d","MHS32a",
-                             "ED88","ED89","ED86e","ED87e"))
+                             "CYP23","MHS61a","MHS30d","MHS32a","MHS39a","CYP32",
+                             "ED88","ED89","ED90","ED86e","ED87e","ED32",
+                             "CCR70b","CCR71b"))
 
 #Correct dates
 MHSDS_main_pooled <- MHSDS_main_pooled %>%
@@ -91,7 +92,7 @@ ed_cyp_measures <- MHSDS_ED_pooled %>%
 
 #Clean up dates
 MHSDS_ED_pooled <- MHSDS_ED_pooled %>%
-  filter(.,MEASURE_ID %in% c("ED88","ED89","ED86e","ED87e")) %>% 
+  filter(.,MEASURE_ID %in% c("ED32","ED88","ED89","ED90","ED86e","ED87e")) %>% 
   mutate(.,start_date=lubridate::dmy(REPORTING_PERIOD_START),
          end_date=lubridate::dmy(REPORTING_PERIOD_END))
 

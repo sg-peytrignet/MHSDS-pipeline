@@ -15,6 +15,7 @@ library("here")
 library("rvest")
 library("downloader")
 library("curl")
+library("data.table")
 
 #Clean up the global environment
 rm(list = ls())
